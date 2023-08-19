@@ -1,5 +1,6 @@
 package com.udacity.jdnd.course3.critter.schedule;
 
+import com.udacity.jdnd.course3.critter.exception.ResourceNotFoundException;
 import com.udacity.jdnd.course3.critter.pet.Pet;
 import com.udacity.jdnd.course3.critter.pet.PetRepository;
 import com.udacity.jdnd.course3.critter.user.*;
@@ -23,109 +24,39 @@ public class ScheduleService {
     @Autowired
     ScheduleRepository scheduleRepository;
 
-    public ScheduleDTO save(ScheduleDTO scheduleDTO) {
-        Schedule schedule = scheduleRepository.save(mapDTOToEntity(scheduleDTO));
-        return mapEntityToDTO(schedule);
+    public ScheduleService(EmployeeRepository employeeRepository, PetRepository petRepository,
+                           CustomerRepository customerRepository, ScheduleRepository scheduleRepository) {
+        this.employeeRepository = employeeRepository;
+        this.petRepository = petRepository;
+        this.customerRepository = customerRepository;
+        this.scheduleRepository = scheduleRepository;
     }
 
-    public List<ScheduleDTO> getAllSchedules() {
-        List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
-        List<Schedule> retrievedSchedules = scheduleRepository.findAll();
-        if (retrievedSchedules != null) {
-            for (Schedule schedule : retrievedSchedules) {
-                scheduleDTOs.add(mapEntityToDTO(schedule));
-            }
-        }
-        return scheduleDTOs;
+    public Schedule saveSchedule(Schedule schedule, List<Long> employeeIds, List<Long> petIds) {
+        List<Employee> employees = employeeRepository.findAllById(employeeIds);
+        List<Pet> pets = petRepository.findAllById(petIds);
+        schedule.setEmployeeIds(employees);
+        schedule.setPetIds(pets);
+        return scheduleRepository.save(schedule);
     }
 
-    public List<ScheduleDTO> getScheduleForPet(long petId) {
-        List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
-        Pet pet = petRepository.getOne(petId);
-        List<Schedule> retrievedSchedules = scheduleRepository.findAll();
-        if (retrievedSchedules != null) {
-            for (Schedule schedule : retrievedSchedules) {
-                if (schedule.getPets().contains(pet)) {
-                    scheduleDTOs.add(mapEntityToDTO(schedule));
-                }
-            }
-        }
-        return scheduleDTOs;
+    public List<Schedule> getScheduleByEmployeeId(long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> new ResourceNotFoundException("No Employee for ID : " + employeeId));
+        return scheduleRepository.getAllEmployeesContains(employee);
     }
 
-    public List<ScheduleDTO> getScheduleForEmployee(long employeeId) {
-        List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
-        Employee employee = employeeRepository.getOne(employeeId);
-        List<Schedule> retrievedSchedules = scheduleRepository.findAll();
-        if (retrievedSchedules != null) {
-            for (Schedule schedule : retrievedSchedules) {
-                if (schedule.getEmployees().contains(employee)) {
-                    scheduleDTOs.add(mapEntityToDTO(schedule));
-                }
-            }
-        }
-        return scheduleDTOs;
+    public List<Schedule> getScheduleByPetId(long petId) {
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new ResourceNotFoundException("No Pet for ID : " + petId));
+        return scheduleRepository.getAllPetsIn(pet);
     }
 
-    public List<ScheduleDTO> getScheduleForCustomer(long customerId) {
-        List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
-        Customer customer = customerRepository.getOne(customerId);
-        List<Schedule> retrievedSchedules = scheduleRepository.findAll();
-        if (retrievedSchedules != null) {
-            for (Schedule schedule : retrievedSchedules) {
-                if (schedule.getPets() != null) {
-                    for (Pet pet : schedule.getPets()) {
-                        if (pet.getCustomer() != null && pet.getCustomer().equals(customer)) {
-                            scheduleDTOs.add(mapEntityToDTO(schedule));
-                        }
-                    }
-                }
-            }
-        }
-        return scheduleDTOs;
+    public List<Schedule> getScheduleByCustomerId(long customerId) {
+        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new ResourceNotFoundException("No Customer with ID : " + customerId));
+        List<Pet> customerPets = customer.getPets();
+        return scheduleRepository.getAllByPetsIn(customerPets);
     }
 
-    private Schedule mapDTOToEntity(ScheduleDTO scheduleDTO) {
-        Schedule schedule = new Schedule();
-        BeanUtils.copyProperties(scheduleDTO, schedule);
-        List<Employee> employeeList = new ArrayList<>();
-        if (scheduleDTO.getEmployeeIds() != null) {
-            for (long employeeId : scheduleDTO.getEmployeeIds()) {
-                employeeList.add(employeeRepository.getOne(employeeId));
-            }
-        }
-        schedule.setEmployees(employeeList);
-
-        List<Pet> petList = new ArrayList<>();
-
-        if (scheduleDTO.getPetIds() != null) {
-            for (long petId : scheduleDTO.getPetIds()) {
-                petList.add(petRepository.getOne(petId));
-            }
-        }
-        schedule.setPets(petList);
-        return schedule;
-    }
-
-    private ScheduleDTO mapEntityToDTO(Schedule schedule) {
-        ScheduleDTO scheduleDTO = new ScheduleDTO();
-        BeanUtils.copyProperties(schedule, scheduleDTO);
-        List<Long> petIds = new ArrayList<>();
-        List<Long> employeeIds = new ArrayList<>();
-        if (schedule.getEmployees() != null) {
-            for (Employee employee : schedule.getEmployees()) {
-                employeeIds.add(employee.getId());
-            }
-        }
-        scheduleDTO.setEmployeeIds(employeeIds);
-
-        if (schedule.getPets() != null) {
-            for (Pet pet : schedule.getPets()) {
-                petIds.add(pet.getId());
-            }
-        }
-        scheduleDTO.setPetIds(petIds);
-
-        return scheduleDTO;
+    public List<Schedule> getAllSchedules() {
+        return scheduleRepository.findAll();
     }
 }

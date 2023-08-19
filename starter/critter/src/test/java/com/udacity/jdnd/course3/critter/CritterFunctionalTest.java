@@ -11,6 +11,7 @@ import com.udacity.jdnd.course3.critter.user.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,8 @@ import java.util.stream.IntStream;
  */
 @Transactional
 @SpringBootTest(classes = CritterApplication.class)
+@EntityScan(basePackages = {"com.udacity.jdnd.course3.critter.pet", "com.udacity.jdnd.course3.critter.user",
+"com.udacity.jdnd.course3.critter.schedule"})
 public class CritterFunctionalTest {
 
     @Autowired

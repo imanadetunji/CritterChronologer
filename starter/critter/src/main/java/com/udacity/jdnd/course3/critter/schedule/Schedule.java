@@ -16,13 +16,15 @@ public class Schedule implements Serializable {
     @GeneratedValue
     private Long id;
 
+    @ElementCollection
+    private Set<EmployeeSkill> activities;
+
     @ManyToMany(targetEntity = Employee.class)
     private List<Employee> employees;
+
     @ManyToMany(targetEntity = Pet.class)
     private List<Pet> pets;
     private LocalDate date;
-    @ElementCollection
-    private Set<EmployeeSkill> activities;
 
     public List<Employee> getEmployees() {
         return employees;
@@ -32,8 +34,16 @@ public class Schedule implements Serializable {
         this.employees = employees;
     }
 
+    public void setEmployeeIds(List<Employee> employeeIds) {
+        this.employees = employeeIds;
+    }
+
     public List<Pet> getPets() {
         return pets;
+    }
+
+    public void setPetIds(List<Pet> petIds) {
+        this.pets = petIds;
     }
 
     public void setPets(List<Pet> pets) {

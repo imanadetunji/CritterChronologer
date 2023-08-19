@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Customer {
+public class Customer implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     private String name;
 
@@ -19,8 +19,8 @@ public class Customer {
 
     private String notes;
 
-    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<Pet> pets;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pet> pets = new ArrayList<>();
 
     public long getId() {
         return id;

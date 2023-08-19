@@ -1,5 +1,6 @@
 package com.udacity.jdnd.course3.critter.pet;
 
+import com.udacity.jdnd.course3.critter.exception.ResourceNotFoundException;
 import com.udacity.jdnd.course3.critter.user.Customer;
 import com.udacity.jdnd.course3.critter.user.CustomerRepository;
 import org.springframework.beans.BeanUtils;
@@ -18,55 +19,32 @@ public class PetService {
     @Autowired
     CustomerRepository customerRepository;
 
-    public PetDTO save(PetDTO petDTO) {
-        Pet pet = petRepository.save(mapDTOToEntity(petDTO));
-        if (pet.getCustomer() != null) {
-            Customer customer = pet.getCustomer();
-            customer.insertPet(pet);
-            customerRepository.save(customer);
-        }
-        return mapEntityToDTO(pet);
+    public PetService(PetRepository petRepository, CustomerRepository customerRepository) {
+        this.petRepository = petRepository;
+        this.customerRepository = customerRepository;
     }
 
-    public PetDTO getOne(long petId) {
-        return mapEntityToDTO(petRepository.getOne(petId));
+    public Pet save(Pet pet, Long customerId) {
+        Pet newPet = new Pet();
+        Customer customer =
+                customerRepository.findById(customerId).orElseThrow(() -> new ResourceNotFoundException("No Customer Exist for ID : " + customerId));
+        pet.setOwnerId(customer);
+        newPet = petRepository.save(pet);
+        customer.insertPet(newPet);
+        customerRepository.save(customer);
+        return newPet;
     }
 
-    public List<PetDTO> getPetsByOwner(long id) {
-        Customer customer = customerRepository.getOne(id);
-        List<PetDTO> petDTOs = new ArrayList<>();
-        if (customer != null && customer.getPets() != null) {
-            for (Pet pet : customer.getPets()) {
-                petDTOs.add(mapEntityToDTO(pet));
-            }
-        }
-        return petDTOs;
+    public Pet getPetById(Long id) {
+        return petRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pet does not exist for ID: " + id));
     }
 
-    public List<PetDTO> getPets() {
-        List<Pet> petList = petRepository.findAll();
-        List<PetDTO> petDTOs = new ArrayList<>();
-        for (Pet pet : petList) {
-            petDTOs.add(mapEntityToDTO(pet));
-        }
-        return petDTOs;
+    public List<Pet> getAllPets() {
+        return petRepository.findAll();
     }
 
-    private Pet mapDTOToEntity(PetDTO petDTO) {
-        Pet pet = new Pet();
-        BeanUtils.copyProperties(petDTO, pet);
-        if (petDTO.getOwnerId() != 0) {
-            pet.setCustomer(customerRepository.getOne(petDTO.getOwnerId()));
-        }
-        return pet;
-    }
-
-    private PetDTO mapEntityToDTO(Pet pet) {
-        PetDTO petDTO = new PetDTO();
-        BeanUtils.copyProperties(pet, petDTO);
-        if (pet.getCustomer() != null) {
-            petDTO.setOwnerId(pet.getCustomer().getId());
-        }
-        return petDTO;
+    public List<Pet> getPetsByOwner(long ownerId) {
+        Customer customer = customerRepository.findById(ownerId).orElseThrow(()-> new ResourceNotFoundException("No Customer Exist for ID : " + ownerId));
+        return petRepository.findByCustomer(customer);
     }
 }

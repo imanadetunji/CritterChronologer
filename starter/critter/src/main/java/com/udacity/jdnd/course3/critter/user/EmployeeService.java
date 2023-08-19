@@ -1,5 +1,6 @@
 package com.udacity.jdnd.course3.critter.user;
 
+import com.udacity.jdnd.course3.critter.exception.ResourceNotFoundException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,26 +18,17 @@ public class EmployeeService {
     @Autowired
     EmployeeRepository employeeRepository;
 
-    public EmployeeDTO save(EmployeeDTO employeeDTO) {
-        Employee employee = new Employee();
-        BeanUtils.copyProperties(employeeDTO, employee);
-        Employee retrievedEmployee = employeeRepository.save(employee);
-        EmployeeDTO retrievedEmployeeDTO = new EmployeeDTO();
-        BeanUtils.copyProperties(retrievedEmployee, retrievedEmployeeDTO);
-        return retrievedEmployeeDTO;
+    public Employee saveEmployee(Employee employee) {
+        return employeeRepository.save(employee);
     }
-
-    public EmployeeDTO findById(long id) {
-        Employee retrievedEmployee = employeeRepository.getOne(id);
-        EmployeeDTO retrievedEmployeeDTO = new EmployeeDTO();
-        BeanUtils.copyProperties(retrievedEmployee, retrievedEmployeeDTO);
-        return retrievedEmployeeDTO;
+    public Employee findById(long id) {
+        return employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Customer not found for ID: " + id));
     }
 
     public void setAvailability(Set<DayOfWeek> daysAvailable, long employeeId) {
         Employee employee = employeeRepository.getOne(employeeId);
         employee.setDaysAvailable(daysAvailable);
-        employeeRepository.save(employee);
+        saveEmployee(employee);
     }
 
     public List<EmployeeDTO> findEmployeesForService(EmployeeRequestDTO employeeRequestDTO) {
@@ -52,6 +44,25 @@ public class EmployeeService {
             }
         }
         return employeeDTOs;
+    }
+
+    public List<Employee> getEmployeeBySkillAndDate(Set<EmployeeSkill> skills, LocalDate date) {
+
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        List<Employee> employees = new ArrayList<Employee>();
+        for(EmployeeSkill skill : skills) {
+            List<Employee> resultSet = employeeRepository.getAllBySkills(skill);
+            for (Employee empl : resultSet) {
+                if (!employees.contains(empl) && empl.getDaysAvailable().contains(dayOfWeek) && empl.getSkills().containsAll(skills)) {
+                    employees.add(empl);
+                }
+            }
+        }
+        return employees;
+    }
+
+    public Employee getEmployeeById(long id) {
+        return employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Customer not found, ID: " + id));
     }
 
     private EmployeeDTO mapEntityToDTO(Employee employee) {

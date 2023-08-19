@@ -2,33 +2,29 @@ package com.udacity.jdnd.course3.critter.pet;
 
 import com.udacity.jdnd.course3.critter.user.Customer;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
 public class Pet implements Serializable {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private PetType type;
     private String name;
     @ManyToOne(targetEntity = Customer.class)
-    private Long ownerId;
+    private long ownerId;
     private LocalDate birthDate;
     private String notes;
-    @ManyToOne(targetEntity = Customer.class, optional = false)
+    @ManyToOne(targetEntity = Customer.class, optional = false, cascade = CascadeType.ALL)
     private Customer customer;
 
-    public Customer getCustomer() {
+    public Customer getOwnerId() {
         return customer;
     }
 
-    public void setCustomer(Customer customer) {
+    public void setOwnerId(Customer customer) {
         this.customer = customer;
     }
 
@@ -48,13 +44,6 @@ public class Pet implements Serializable {
         this.name = name;
     }
 
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
 
     public LocalDate getBirthDate() {
         return birthDate;
