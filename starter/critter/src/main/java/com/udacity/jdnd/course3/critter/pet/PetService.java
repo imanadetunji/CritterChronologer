@@ -25,15 +25,15 @@ public class PetService {
     }
 
     public Pet save(Pet pet, Long customerId) {
-        Pet newPet = new Pet();
-        Customer customer =
-                customerRepository.findById(customerId).orElseThrow(() -> new ResourceNotFoundException("No Customer Exist for ID : " + customerId));
-        pet.setOwnerId(customer);
-        newPet = petRepository.save(pet);
-        customer.insertPet(newPet);
-        customerRepository.save(customer);
-        return newPet;
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No Customer Exist for ID : " + customerId));
+        pet.setCustomer(customer);  // Set the customer for the pet
+        Pet savedPet = petRepository.save(pet);  // Save the pet
+        customer.insertPet(savedPet);  // Insert the saved pet into the customer's list
+        customerRepository.save(customer);  // Save the updated customer
+        return savedPet;
     }
+
 
     public Pet getPetById(Long id) {
         return petRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pet does not exist for ID: " + id));

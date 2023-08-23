@@ -4,12 +4,10 @@ import com.udacity.jdnd.course3.critter.exception.ResourceNotFoundException;
 import com.udacity.jdnd.course3.critter.pet.Pet;
 import com.udacity.jdnd.course3.critter.pet.PetRepository;
 import com.udacity.jdnd.course3.critter.user.*;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,18 +40,18 @@ public class ScheduleService {
 
     public List<Schedule> getScheduleByEmployeeId(long employeeId) {
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> new ResourceNotFoundException("No Employee for ID : " + employeeId));
-        return scheduleRepository.getAllEmployeesContains(employee);
+        return scheduleRepository.findAllByEmployeesContains(employee);
     }
 
     public List<Schedule> getScheduleByPetId(long petId) {
         Pet pet = petRepository.findById(petId).orElseThrow(() -> new ResourceNotFoundException("No Pet for ID : " + petId));
-        return scheduleRepository.getAllPetsIn(pet);
+        return scheduleRepository.findAllByPetsContains(pet);
     }
 
     public List<Schedule> getScheduleByCustomerId(long customerId) {
         Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new ResourceNotFoundException("No Customer with ID : " + customerId));
         List<Pet> customerPets = customer.getPets();
-        return scheduleRepository.getAllByPetsIn(customerPets);
+        return scheduleRepository.findAllByPetsIn(customerPets);
     }
 
     public List<Schedule> getAllSchedules() {

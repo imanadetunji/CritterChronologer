@@ -13,8 +13,6 @@ public class Pet implements Serializable {
     private Long id;
     private PetType type;
     private String name;
-    @ManyToOne(targetEntity = Customer.class)
-    private long ownerId;
     private LocalDate birthDate;
     private String notes;
     @ManyToOne(targetEntity = Customer.class, optional = false, cascade = CascadeType.ALL)
@@ -22,6 +20,14 @@ public class Pet implements Serializable {
 
     public Customer getOwnerId() {
         return customer;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public void setOwnerId(Customer customer) {
